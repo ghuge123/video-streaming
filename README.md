@@ -36,6 +36,7 @@
 
 ## 📂 Project Structure
 
+```plaintext
 Video Streaming/
 │
 ├── .gitignore
@@ -53,6 +54,7 @@ Video Streaming/
 │   ├── public/
 │   ├── src/
 └── ...
+```
 
 
 ---
