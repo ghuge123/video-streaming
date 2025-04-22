@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import { Tweet } from "../models/tweets.model";
-import { User } from "../models/user.model";
+import { Tweet } from "../models/tweets.model.js";
+import { User } from "../models/user.model.js";
 
 export const createTweet = async (req, res) => {
     try {

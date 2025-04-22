@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Subscriber } from "../models/subscriber.model";
+import { Subscriber } from "../models/subscriber.model.js";
 
 export const toggleSubscription = async (req, res) => {
     const {channelId} = req.params

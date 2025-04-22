@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import connectDB from './db/db.js';
-import express, { json } from 'express';
+import express from 'express';
 import cors from 'cors'
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';

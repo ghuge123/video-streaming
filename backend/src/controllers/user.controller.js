@@ -102,7 +102,7 @@ export const userLogin = async (req, res) => {
         .status(200)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
-        .json("user logged in successfully");
+        .json({message: "user logged in successfully" , success: true})
 }
 
 export const loggOut = async (req, res) => {

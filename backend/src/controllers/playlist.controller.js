@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import { Playlist } from "../models/playlist.model";
-import { Video } from "../models/video.model";
+import { Playlist } from "../models/playlist.model.js";
+import { Video } from "../models/video.model.js";
 
 export const createPlaylist = async (req, res) => {
     try {

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Comment } from "../models/comments.model";
+import { Comment } from "../models/comments.model.js";
 
 export const getVideoComments = async (req, res) => {
     //TODO: get all comments for a video

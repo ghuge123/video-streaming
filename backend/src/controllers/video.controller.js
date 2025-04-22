@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import { Video } from "../models/video.model";
-import { User } from "../models/user.model";
-import { deleteFromCloudinary, uploadOnCloudinary, extractPublicId } from "../utils/cloudinary";
+import { Video } from "../models/video.model.js";
+import { User } from "../models/user.model.js";
+import { deleteFromCloudinary, uploadOnCloudinary, extractPublicId } from "../utils/cloudinary.js";
 
 export const getAllVideos = async (req, res) => {
     try {

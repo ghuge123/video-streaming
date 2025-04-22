@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Like } from "../models/likes.model";
+import { Like } from "../models/likes.model.js";
 
 export const toggleVideoLike = async (req, res) => {
     try {
