@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import { Subscriber } from "../models/subscriber.model.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken'
 
@@ -29,52 +27,57 @@ export const userRegistration = async (req, res) => {
     // generate the token
     //  create entry in db
 
-    const { fullName, email, username, password } = req.body; // data from form and req body
-    let user = await User.findOne({
-        $or: [{ username }, { email }]
-    });
+    try {
+        const { fullName, email, username, password } = req.body; // data from form and req body
+    
+        let user = await User.findOne({
+            $or: [{ username }, { email }]
+        });
 
-    if (user) {
-        return res.status(409).send('user with this username or email is exist');
+    
+        if (user) {
+            return res.status(409).send({message: 'user with this username or email is exist' , success: false});
+        }
+    
+        console.log(req.files);
+    
+        const avatarLocalPath = req.files?.avatar?.[0]?.path;
+        const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+    
+        // if (!avatarLocalPath) {
+        //     return res.status(409).send({message: 'Avatar image is required! ' , success: false});
+        // }
+        // const avatar = await uploadOnCloudinary(avatarLocalPath);
+        // const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    
+        // if (!avatar) {
+        //     return res.status(409).send({message: 'Avatar image is required1! ' , success: false});
+        // }
+    
+        const salt = await bcrypt.genSalt(10);
+        const newPass = await bcrypt.hash(password, salt);
+    
+        user = new User({
+            fullName: fullName,
+            email: email,
+            username: username,
+            password: newPass,
+            avatar: avatarLocalPath || "",
+            coverImage: coverImageLocalPath || "",
+        });
+
+        await user.save();
+        res.send({message: "user register successfully" , success: true});
+    } catch (error) {
+        res.status(500).send({ message: "Internal Server Error", success: false });
     }
-
-    console.log(req.files);
-
-    const avatarLocalPath = req.files?.avatar?.[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
-
-    if (!avatarLocalPath) {
-        return res.status(409).send('Avatar image is required1! ');
-    }
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
-    if (!avatar) {
-        return res.status(409).send('Avatar image is required! ');
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const newPass = await bcrypt.hash(password, salt);
-
-    user = new User({
-        fullName: fullName,
-        email: email,
-        username: username,
-        password: newPass,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
-    });
-
-    const token = jwt.sign({ user: { id: user.id } }, process.env.JWT_SECRET);
-    await user.save();
-    res.send(token);
 }
 
 export const userLogin = async (req, res) => {
     const { email, username, password } = req.body;
 
     if (!username && !email) {
-        return res.status(409).send("please provide username or email for login");
+        return res.status(409).send({message:"please provide username or email for login" , success: false});
     }
 
     let user = await User.findOne({
@@ -82,13 +85,13 @@ export const userLogin = async (req, res) => {
     });
 
     if (!user) {
-        return res.status(409).send("user with this username or email doesn't exist");
+        return res.status(409).send({message:"user with this username or email doesn't exist" , success: false});
     }
 
     const isUser = await bcrypt.compare(password, user.password);
 
     if (!isUser) {
-        return res.status(409).send("Invalid credentials!");
+        return res.status(409).send({message:"Invalid credentials!" , success: false});
     }
 
     const { refreshToken, accessToken } = await generateAccessTokenAndRefreshToken(user._id);
@@ -106,6 +109,7 @@ export const userLogin = async (req, res) => {
 }
 
 export const loggOut = async (req, res) => {
+    console.log(req.user.id);
     await User.findByIdAndUpdate(
         req.user.id,
         {
@@ -123,7 +127,7 @@ export const loggOut = async (req, res) => {
         .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
-        .json("user loggOut successfully");
+        .json({message: "user loggOut successfully" , success: true});
 }
 
 export const refreshAccessToken = async (req, res) => {
@@ -179,7 +183,7 @@ export const changeCurrentPassword = async (req, res) => {
 export const getUser = async (req, res) => {
     return res
         .status(200)
-        .json(req.user);
+        .json({user : req.user , success:true});
 }
 
 export const updateAccountDetails = async (req, res) => {
@@ -207,21 +211,16 @@ export const updateAccountDetails = async (req, res) => {
 }
 
 export const updateUserAvatar = async (req, res) => {
-    const avatarLocalPath = req.file?.path;
-    if (!avatarLocalPath) {
-        return res.status(401).json("avatar file is missing");
-    }
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-
+    const avatar = req.file?.path;
     if (!avatar) {
-        return res.status(401).json("Error while uploading avatar file");
+        return res.status(401).json("avatar file is missing");
     }
 
     let user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                avatar: avatar?.url
+                avatar: avatar
             }
         },
         { new: true } // return updated data
@@ -232,21 +231,16 @@ export const updateUserAvatar = async (req, res) => {
 }
 
 export const updateCoverImage = async (req, res) => {
-    const coverImageLocalPath = req.file?.path;
-    if (!coverImageLocalPath) {
-        return res.status(401).json("cover image is missing");
-    }
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
+    const coverImage = req.file?.path;
     if (!coverImage) {
-        return res.status(401).json("Error while uploading cover image");
+        return res.status(401).json("cover image is missing");
     }
 
     let user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                coverImage: coverImage?.url
+                coverImage: coverImage
             }
         },
         { new: true } // return updated data

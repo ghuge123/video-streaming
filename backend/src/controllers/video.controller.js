@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { Video } from "../models/video.model.js";
-import { User } from "../models/user.model.js";
-import { deleteFromCloudinary, uploadOnCloudinary, extractPublicId } from "../utils/cloudinary.js";
+
 
 export const getAllVideos = async (req, res) => {
     try {
@@ -49,25 +48,16 @@ export const getAllVideos = async (req, res) => {
 export const publishAVideo = async (req, res) => {
     const { title, description} = req.body
     // TODO: get video, upload to cloudinary, create video
-    const videoLocalPath = req.files?.videoFile?.path;
-    const thumbnailLocalPath = req.files?.thumbnail?.path;
-
-    if(!videoLocalPath){
-        return res.status(401).json("video file is required");
-    }
-    if(!thumbnailLocalPath){
-        return res.status(401).json("thumbnail file is required");
-    }
-
-    const video = await uploadOnCloudinary(videoLocalPath);
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    const video = req.files?.videoFile?.path;
+    const thumbnail = req.files?.thumbnail?.path;
 
     if(!video){
-        return res.status(401).json("video not uploaded");
+        return res.status(401).json({message: "video file is required" , success: false});
     }
     if(!thumbnail){
-        return res.status(401).json("thumbnail not uploaded");
+        return res.status(401).json({message: "thumbnail file is required" , success: false});
     }
+
     console.log(video.duration);
     const data = await new Video({
         title : title,
@@ -81,7 +71,7 @@ export const publishAVideo = async (req, res) => {
     });
     return res
     .status(200)
-    .json("video uploaded successfully");
+    .json({video: data , success: true});
 }
 
 export const getVideoById = async (req, res) => {
@@ -140,11 +130,7 @@ export const updateVideo = async (req, res) => {
     }
     const thumbnailLocalPath = thumbnail?.path;
     if(thumbnailLocalPath){
-        const updatedThumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-        if(!updatedThumbnail){
-            return res.status(500).json("error while uploading on cloudinary");
-        }
-        filter.thumbnail = updatedThumbnail.url
+        filter.thumbnail = thumbnailLocalPath
     }
 
     const data = await Video.findByIdAndUpdate(
@@ -161,24 +147,24 @@ export const updateVideo = async (req, res) => {
 
 export const deleteVideo = async (req, res) => {
     const { videoId } = req.params
+    const userId = req.user?._id;
     //TODO: delete video
-    const video = await Video.findById(videoId);
-    if(!video){
-        return res.status(401).json("video not found");
-    }
-
-    if(video.thumbnail){
-        const thumbnailpublicId = await extractPublicId(video.thumbnail);
-        await deleteFromCloudinary(thumbnailpublicId); 
-    }
-    if(video.videoFile){
-        const videoPublicId = await extractPublicId(video.videoFile);
-        await deleteFromCloudinary(videoPublicId)
-    }
-
-    await Video.findByIdAndDelete(videoId);
+    try {
+        const video = await Video.findById(videoId);
+        if(!video){
+            return res.status(401).json("video not found");
+        }
     
-    return res.status(200).json("video deleted successfully");
+        if(video.owner.toString() !== video.userId.toString()){
+            return res.status(403).json({message: "you can't delete others file"});
+        }
+    
+        await Video.findByIdAndDelete(videoId);
+        
+        return res.status(200).json("video deleted successfully");
+    } catch (error) {
+        return res.status(500).json({message: "internal server error"});
+    }
 };
 
 export const togglePublishStatus = async (req, res) => {

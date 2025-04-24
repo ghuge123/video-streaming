@@ -4,6 +4,7 @@ import MainBody from "./MainBody";
 import Alert from "./Alert";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./Login";
+import Signup from "./Signup";
 
 export default function Home() {
     const [sidebar, setSidebar] = useState(true);
@@ -28,11 +29,12 @@ export default function Home() {
     return (
         <>
             <Router>
-                <Navbar toggleSidebar={toggleSidebar} />
+                <Navbar toggleSidebar={toggleSidebar} showAlert={showAlert} />
                 <Alert alert={alert} />
                     <Routes>
                         <Route path="/" element={<MainBody sidebar={sidebar} showAlert={showAlert} />}></Route>
                         <Route path="/login" element={<Login showAlert={showAlert}></Login>} />
+                        <Route path="/signup" element={<Signup showAlert={showAlert}></Signup>} />
                     </Routes>
             </Router>
 

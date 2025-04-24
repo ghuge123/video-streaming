@@ -1,5 +1,8 @@
-import { v2 as cloudinary } from 'cloudinary';
-import fs from 'fs';
+import pkg from 'cloudinary';
+const { v2: cloudinary } = pkg;
+import { CloudinaryStorage} from 'multer-storage-cloudinary';
+import multer from 'multer';
+
 
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
@@ -7,37 +10,15 @@ cloudinary.config({
     api_secret: process.env.API_SECRET
 });
 
-const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        if (!localFilePath) return null;
+console.log(process.env.CLOUD_NAME);
+export const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'youtube',
+      allowedFormates: ['png' , 'jpg' , 'jpeg']
+    },
+  });
 
-        const response = await cloudinary.uploader.upload(localFilePath , {resource_type : "auto"});
-        console.log("file is uploaded on cloudinary " , response.url);
-        fs.unlinkSync(localFilePath);
-        return response;
+export const upload = multer({storage});
 
-    } catch (error) {
-        fs.unlinkSync(localFilePath);
-        return null;
-    }
-}
-
-const deleteFromCloudinary = async (publicId) => {
-    try {
-        const result = await cloudinary.uploader.destroy(publicId);
-        return result;
-    } catch (error) {
-        console.error("Error deleting from Cloudinary:", error);
-        return null;
-    }
-}
-
-const extractPublicId = (url) => {
-    // Example: https://res.cloudinary.com/demo/image/upload/v1234567890/folder/image_name.jpg
-    const parts = url.split('/');
-    const filename = parts[parts.length - 1].split('.')[0]; // "image_name"
-    const folder = parts[parts.length - 2]; // "folder"
-    return `${folder}/${filename}`; // "folder/image_name"
-  };
-
-export {uploadOnCloudinary , deleteFromCloudinary , extractPublicId};
+  

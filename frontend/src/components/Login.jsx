@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import {useNavigate} from 'react-router-dom'
+import { UserContext } from '../context/userContext';
 
 function Login({showAlert}) {
     const [user , setUser] = useState({email: "" , password : ""});
     let navigate = useNavigate();
+
+    const {fetchData} = useContext(UserContext);
 
     const handleSubmit = async (e)=>{
         e.preventDefault();
@@ -19,6 +22,7 @@ function Login({showAlert}) {
 
         const data = await response.json();
         if(data.success){
+            await fetchData();
             navigate('/');
             showAlert("Login Successfully", "success");
         }else{
@@ -27,12 +31,12 @@ function Login({showAlert}) {
     }
 
     const onChange = (e)=>{
-        setUser({...user , [e.target.name] : e.target.value});
+        setUser({ ...user, [e.target.name]: e.target.value });
     }
   return (
     <div className="container d-flex justify-content-center align-items-center mt-4" >
             <div className="card p-4 shadow-lg rounded-4" style={{ width: "400px" }}>
-                <h2 className="text-center mb-4">Login to continue with iNotebook</h2>
+                <h2 className="text-center mb-4">Login to continue</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <label htmlFor="email" className="form-label" >Email</label>

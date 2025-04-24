@@ -7,9 +7,11 @@ import mongoose from 'mongoose';
 const app = express();
 
 dotenv.config();
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173', // your frontend Vite app
+    credentials: true
+  }));
 app.use(express.json());
-app.use(express.urlencoded({extended : true}));
 app.use(express.static('public'));
 app.use(cookieParser());
 
