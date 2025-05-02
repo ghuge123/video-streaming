@@ -8,7 +8,7 @@ export const getVideoComments = async (req, res) => {
         const {page = 1, limit = 10} = req.query
     
         if (!videoId) {
-            return res.status(400).json({ message: "Video ID is required" });
+            return res.status(400).json({ message: "Video ID is required" , success: false });
         }
     
     
@@ -36,7 +36,8 @@ export const getVideoComments = async (req, res) => {
                                 $project:{
                                     fullName: 1,
                                     username: 1,
-                                    avatar: 1
+                                    avatar: 1,
+                                    coverImage: 1
                                 }
                             }
                         ]
@@ -54,10 +55,11 @@ export const getVideoComments = async (req, res) => {
     
         return res.status(200).json({
             totalComments: comments.length,
-            comments
+            comments,
+            success: true
         });
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error"  , success: false});
     }
 }
 
@@ -69,15 +71,15 @@ export const addComment = async (req, res) => {
         const userId = req.user?._id;
     
         if(!videoId){
-            return res.status(400).json({ message: "Video ID is required" });
+            return res.status(400).json({ message: "Video ID is required" , success: false });
         }
     
         if(!userId){
-            return res.status(400).json({message: "unauthorize user"});
+            return res.status(400).json({message: "unauthorize user" , success: false});
         }
 
         if(!content || content.trim()===""){
-            return res.status(400).json({ message: "Comment content is required" });
+            return res.status(400).json({ message: "Comment content is required" , success: false});
         }
     
         const comment = await new Comment({
@@ -86,9 +88,9 @@ export const addComment = async (req, res) => {
             owner: userId
         });
         await comment.save();
-        return res.status(200).json("comment added successfully");
+        return res.status(200).json({message:"comment added successfully" , success: true});
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" , success: false});
     }
 }
 

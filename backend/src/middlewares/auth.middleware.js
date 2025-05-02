@@ -8,9 +8,8 @@ export const verifyJWT = async(req , res , next) => {
         if(!token){
             return res.status(401).json("Unauthorize user");
         }
-        let decodedUser =  jwt.verify(token , process.env.JWT_ACCESS_SECRET);
+        let decodedUser = jwt.verify(token , process.env.JWT_ACCESS_SECRET);
         let user = await User.findById(decodedUser?.user.id).select("-password -refreshToken")
-    
         if(!user){
             return res.status(401).json("invalid access token");
         }

@@ -4,11 +4,11 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../utils/cloudinary.js";
 
 const router = Router();
-router.use(verifyJWT); //  it apply verifyJWT middleware to all routes
+// router.use(verifyJWT); //  it apply verifyJWT middleware to all routes
 
 router.route("/" )
 .get(getAllVideos)
-.post(upload.fields([
+.post(verifyJWT , upload.fields([
     {
         name: "videoFile",
         maxCount: 1
@@ -20,10 +20,10 @@ router.route("/" )
 ]) , publishAVideo);
 
 router.route("/:videoId")
-.get(getVideoById)
-.patch(upload.single("thumbnail"), updateVideo)
-.delete(deleteVideo)
+.get(verifyJWT , getVideoById)
+.patch(verifyJWT , upload.single("thumbnail"), updateVideo)
+.delete(verifyJWT , deleteVideo)
 
-router.route("/toggle/public/:videoId" , togglePublishStatus);
+router.route("/toggle/public/:videoId").patch(verifyJWT , togglePublishStatus);
 
 export default router;

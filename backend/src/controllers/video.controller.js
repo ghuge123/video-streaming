@@ -20,58 +20,57 @@ export const getAllVideos = async (req, res) => {
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const limitNum = parseInt(limit);
     
-        const videos = await Video.aggregate([
-            {
-                $match: filter
-            },
-            {
-                $sort: sort
-            },
-            {
-                $skip: skip
-            },
-            {
-                $limit: limitNum
-            }
-        ]);
+        const videos = await Video.find(filter).populate('owner' , "username fullName avatar coverImage");
+
     
-        const total = await Video.countDocuments(videos);
+        const total = await Video.countDocuments(filter);
+        console.log(total);
+        console.log(videos);
     
         return res
         .status(200)
-        .json(total);
+        .json({count:total , videos:videos});
     } catch (error) {
+        console.log("error")
         return res.status(401).json(error);
     }
 };
 
 export const publishAVideo = async (req, res) => {
-    const { title, description} = req.body
-    // TODO: get video, upload to cloudinary, create video
-    const video = req.files?.videoFile?.path;
-    const thumbnail = req.files?.thumbnail?.path;
+    try {
+       
+        const { title, description} = req.body;
+        
+        // TODO: get video, upload to cloudinary, create video
+        const video = req.files?.videoFile[0];
+        const thumbnail = req.files?.thumbnail[0];
+        
+        if(!video){
+            return res.status(401).json({message: "video file is required" , success: false});
+        }
+        if(!thumbnail){
+            return res.status(401).json({message: "thumbnail file is required" , success: false});
+        }
+    
+        
+        const data =  new Video({
+            title : title,
+            description : description,
+            videoFile : video.path,
+            thumbnail : thumbnail.path,
+            views : 0,
+            isPublished : true,
+            duration: video.duration,
+            owner : req.user._id
+        });
 
-    if(!video){
-        return res.status(401).json({message: "video file is required" , success: false});
+        const response = await data.save();
+        return res
+        .status(200)
+        .json({video: response , success: true});
+    } catch (error) {
+        return res.status(500).json({message:"internal server error" , success: false});
     }
-    if(!thumbnail){
-        return res.status(401).json({message: "thumbnail file is required" , success: false});
-    }
-
-    console.log(video.duration);
-    const data = await new Video({
-        title : title,
-        description : description,
-        videoFile : video,
-        thumbnail : thumbnail,
-        views : 0,
-        isisPublished : true,
-        duration: video.duration,
-        owner : req.user._id
-    });
-    return res
-    .status(200)
-    .json({video: data , success: true});
 }
 
 export const getVideoById = async (req, res) => {

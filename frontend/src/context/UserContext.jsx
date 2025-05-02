@@ -5,6 +5,8 @@ export const UserContext = createContext();
 export const UserProvider = ({children})=>{
     const [user , setUser] = useState(null);
 
+    const [isLogout , setIsLogout] = useState(false);
+
     const url = 'http://localhost:8080/api/v1/user/current-user';
 
     const fetchData = async ()=>{
@@ -30,7 +32,7 @@ export const UserProvider = ({children})=>{
     } , []);
 
     return(
-        <UserContext.Provider value={{user , setUser , fetchData}}>
+        <UserContext.Provider value={{user , setUser , fetchData , setIsLogout , isLogout}}>
             {children}
         </UserContext.Provider>
     )

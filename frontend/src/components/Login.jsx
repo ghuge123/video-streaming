@@ -1,12 +1,15 @@
 import React, { useContext, useState } from 'react'
-import {useNavigate} from 'react-router-dom'
+import {useLocation, useNavigate} from 'react-router-dom'
 import { UserContext } from '../context/userContext';
 
 function Login({showAlert}) {
     const [user , setUser] = useState({email: "" , password : ""});
     let navigate = useNavigate();
 
-    const {fetchData} = useContext(UserContext);
+    const {fetchData , setIsLogout} = useContext(UserContext);
+
+    const location = useLocation();
+    const from = location.state?.from?.pathname || '/';
 
     const handleSubmit = async (e)=>{
         e.preventDefault();
@@ -23,7 +26,8 @@ function Login({showAlert}) {
         const data = await response.json();
         if(data.success){
             await fetchData();
-            navigate('/');
+            navigate(from);
+            setIsLogout(false);
             showAlert("Login Successfully", "success");
         }else{
             showAlert("Invalid Credentials", "danger");

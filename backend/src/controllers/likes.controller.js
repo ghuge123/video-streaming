@@ -8,11 +8,11 @@ export const toggleVideoLike = async (req, res) => {
         const userId = req.user?._id;
     
         if(!videoId){
-            return res.status(400).json({message: "video id is not found"});
+            return res.status(400).json({message: "video id is not found" , success: false});
         }
     
         if(!userId){
-            return res.status(401).json({message: "unauthorized user"});
+            return res.status(401).json({message: "unauthorized user" , success: false});
         }
     
         const isLiked = await Like.findOne({
@@ -22,7 +22,7 @@ export const toggleVideoLike = async (req, res) => {
     
         if(isLiked){
             await Like.findByIdAndDelete(isLiked._id);
-            return res.status(200).json({message: "user disliked the video" , liked: false});
+            return res.status(200).json({message: "user disliked the video" , liked: false , success:true});
         }
         const like =  new Like({
             video: videoId,
@@ -30,9 +30,9 @@ export const toggleVideoLike = async (req, res) => {
         });
     
         await like.save();
-        return res.status(200).json({message: "user liked the video" , liked: true});
+        return res.status(200).json({message: "user liked the video" , liked: true ,  success:true});
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" , success: false});
     }
 }
 
@@ -43,11 +43,11 @@ export const toggleCommentLike = async (req, res) => {
         const userId = req.user?._id;
     
         if(!commentId){
-            return res.status(400).json({message: "comment id is not found"});
+            return res.status(400).json({message: "comment id is not found" , success:false});
         }
     
         if(!userId){
-            return res.status(401).json({message: "unauthorized user"});
+            return res.status(401).json({message: "unauthorized user", success:false});
         }
     
         const existingLike = await Like.findOne({
@@ -114,56 +114,59 @@ export const getLikedVideos = async (req, res) => {
         const userId = req.user?._id;
     
         if(!userId){
-            return res.status(401).json({message: "unauthorized user"});
+            return res.status(401).json({message: "unauthorized user" , success: false});
         }
     
-        const likedVideos = await Like.aggregate([
-            {
-                $match: {
-                    likedBy: new mongoose.Types.ObjectId(userId),
-                    video: { $ne: null } // ensures only video likes
-                }
-            },
-            {
-                $lookup: {
-                    from: 'videos',
-                    localField: 'video',
-                    foreignField: '_id',
-                    as: 'videoData'
-                }
-            },
-            {
-                $unwind: "$videoData"
-            },
-            {
-                $lookup:{
-                    from: 'users',
-                    localField: 'videoData.owner',
-                    foreignField: '_id',
-                    as: 'videoData.owner'
-                }
-            },
-            {
-                $unwind: "$videoData.owner"
-            },
-            {
-                $project: {
-                    videoFile: '$videoData.videoFile',
-                    thumbnail: '$videoData.thumbnail',
-                    title: '$videoData.title',
-                    duration: "$videoData.duration",
-                    views: "$videoData.views",
-                    owner: {
-                        username: "$videoData.owner.username",
-                        fullName: "$videoData.owner.fullName",
-                        avatar: "$videoData.owner.avatar"
-                    }
-                }
-            }
-        ])
+        const likedVideos = await Like.find({
+            likedBy: userId,  // Check for user who liked
+            video: { $ne: null } 
+        })
     
-        return res.status(200).json({message: "user liked videos" , likedVideos});
+        return res.status(200).json({message: "user liked videos" , likedVideos:likedVideos , success: true});
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" , success: false});
+    }
+}
+
+export const getVideoLikes = async (req, res) => {
+    try {
+        const { videoId } = req.params;
+
+        // Replace with your actual logic to count likes
+        const totalLikes = await Like.countDocuments({ video: videoId });
+
+        return res.status(200).json({ success: true, totalLikes });
+    } catch (error) {
+        console.error("Error in getVideoLikes:", error);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+export const getLikedComments = async (req , res) => {
+    const userId = req.user?._id;
+    try {
+        const likedComments = await Like.find({
+            likedBy:userId,
+            comment: {$ne : null}
+        });
+        return res.status(200).json({message: 'user liked comments' , likedComments , success: true})
+    } catch (error) {
+        return res.status(500).json({message: 'Internal server error' , success: false});
+    }
+}
+
+export const getCommentLikes = async (req , res)=>{
+    const {commentId} = req.params;
+
+    if(!commentId){
+        return res.status(400).json({message: 'commentId is required' , success: false});
+    }
+
+    try {
+        const totalComments = await Like.countDocuments({comment: commentId});
+    
+        return res.status(200).json({message: 'comment like fetch successfully' , totalComments , success: true});
+    } catch (error) {
+        return res.status(500).json({message: 'Internal server error'});
     }
 }

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { Subscriber } from "../models/subscriber.model.js";
 
 export const toggleSubscription = async (req, res) => {
@@ -6,7 +6,7 @@ export const toggleSubscription = async (req, res) => {
     // TODO: toggle subscription
     const userId = req.user?._id;
     if(channelId.toString()===userId.toString()){
-        return res.status(401).json("you can not subscribe your own channel");
+        return res.status(400).json({message: "you can not subscribe your own channel" , success: false});
     }
     const existingSub = await Subscriber.findOne({
         subscriber: userId,
@@ -16,14 +16,14 @@ export const toggleSubscription = async (req, res) => {
     if(existingSub){
         // channel is subscribed --> unsubscribe it
         await Subscriber.findByIdAndDelete(existingSub._id);
-        return res.status(200).json("Unsubscribed successfully");
+        return res.status(200).json({message: "Unsubscribed successfully" , success: true});
     }else{
         const newSub = await new Subscriber({
             subscriber : userId,
             channel : channelId
         });
         await newSub.save();
-        return res.status(200).json("channel Subscribed successfully");
+        return res.status(200).json({message: "channel Subscribed successfully" , success: true});
     }
 };
 
@@ -31,12 +31,12 @@ export const getUserChannelSubscribers = async (req, res) => {
     const {channelId} = req.params;
 
     if(!channelId){
-        return res.status(401).json("invalid ID")
+        return res.status(401).json({message: "invalid ID" , success: false})
     }
     const subscribers = await Subscriber.aggregate([
         {
             $match: {
-                channel : channelId
+                channel : new mongoose.Types.ObjectId(channelId)
             }
         },
         {
@@ -63,7 +63,8 @@ export const getUserChannelSubscribers = async (req, res) => {
 
     return res.status(200).json({
         totalSubscribers : subscribers.length,
-        subscribers
+        subscribers : subscribers,
+        success : true
     });
 };
 
