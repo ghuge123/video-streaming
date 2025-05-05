@@ -117,11 +117,28 @@ export const getLikedVideos = async (req, res) => {
             return res.status(401).json({message: "unauthorized user" , success: false});
         }
     
-        const likedVideos = await Like.find({
-            likedBy: userId,  // Check for user who liked
-            video: { $ne: null } 
-        })
-    
+        const likedVideos = await Like.aggregate([
+            {
+                $match: {
+                    likedBy: new mongoose.Types.ObjectId(userId),  // Check for user who liked
+                    video: { $ne: null } 
+                }
+            },
+            {
+                $lookup: {
+                    from: 'videos',
+                    localField: 'video',
+                    foreignField: '_id',
+                    as: 'video'
+                }
+            },
+            {
+                $unwind: '$video'  // Convert video array to object
+            },
+            {
+                $sort: { createdAt: -1 }  // Optional: sort by recent
+            }
+        ]); 
         return res.status(200).json({message: "user liked videos" , likedVideos:likedVideos , success: true});
     } catch (error) {
         return res.status(500).json({ message: "Internal server error" , success: false});

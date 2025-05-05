@@ -1,23 +1,64 @@
-import React, { useState, useEffect, useContext } from 'react'
-import Video from './Video';
-import { VideoContext } from '../context/VideoContext';
+import React, { useContext, useEffect, useState } from 'react'
+import { useLocation, useNavigate , Link } from 'react-router-dom'
+import { UserContext } from '../context/userContext';
 import HomeIcon from '@mui/icons-material/Home';
-import { Link, useLocation } from 'react-router-dom';
 import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
 import SmartDisplayIcon from '@mui/icons-material/SmartDisplay';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import HistoryIcon from '@mui/icons-material/History';
-import '../styles/sidebar.css';
+import Video from './Video';
+import { LikeContext } from '../context/LikeContext';
 
-function MainBody({ sidebar }) {
-  const { videos, fetchVideos } = useContext(VideoContext);
 
+function SidebarTabs({sidebar}) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const stateData = location.state?.type;
 
-  useEffect(() => {
-    fetchVideos();
-  }, [])
+  const [videos , setVideos] = useState([]);
+
+  const {user , loading} = useContext(UserContext);
+  const {getLikedVideos} = useContext(LikeContext);
+
+  useEffect(()=>{
+    if(loading) return;
+
+    if(!user){
+      navigate('/login');
+    }
+
+    const fetchData = async ()=>{
+        if(stateData==='subscriptions'){
+          
+        }
+        if(stateData==="liked"){
+          const data = await getLikedVideos();
+          console.log(data);
+          setVideos(data);
+        }
+        if(stateData==="yourVideos"){
+    
+        }
+        if(stateData==='playlists'){
+          
+        }
+        if(stateData==='history'){
+          const url = 'http://localhost:8080/api/v1/history';
+          const data = await fetch(url , {
+            method: 'get',
+            credentials: 'include'
+          });
+          const result = await data.json();
+          if(result.success){
+            setVideos(result.history);
+          }
+        }
+    };
+
+    fetchData();
+
+  } , [user]);
 
   return (
     <div className='d-flex'>
@@ -53,13 +94,13 @@ function MainBody({ sidebar }) {
           <Link to='/history' state={{ type: 'history' }} style={{textDecoration: 'none' , color: 'white'}}><HistoryIcon className='fs-3'></HistoryIcon></Link>
           <Link to='/history' state={{ type: 'history' }} className='mx-4' style={{textDecoration: 'none' , color: 'white'}}>History</Link>
         </div>
-
       </div>
       <div className='flex-grow-1'>
         <div className='container mt-3'>
           <div className='row'>
             {videos.length === 0 ? "No data found" : videos.map((video) => {
-              return <Video key={video._id} video={video} />;
+              console.log(video);
+              return <Video key={video._id} video={video.video} />;
             })}
           </div>
         </div>
@@ -68,4 +109,4 @@ function MainBody({ sidebar }) {
   )
 }
 
-export default MainBody
+export default SidebarTabs;

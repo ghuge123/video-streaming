@@ -6,6 +6,7 @@ export const UserProvider = ({children})=>{
     const [user , setUser] = useState(null);
 
     const [isLogout , setIsLogout] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const url = 'http://localhost:8080/api/v1/user/current-user';
 
@@ -20,10 +21,29 @@ export const UserProvider = ({children})=>{
             if(data.success){
                 setUser(data.user);
             }else{
-                setUser(null);
+                await refreshToken();
             }
         } catch (error) {
-            console.log("Error:", err);
+            console.log("Error:", error);
+            setUser(false);
+        }finally {
+            setLoading(false);
+        }
+    }
+
+    const refreshToken = async () =>{
+        const url = 'http://localhost:8080/api/v1/user/refresh-token';
+        const response = await fetch(url , {
+            method: 'post',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        console.log(data);
+        if(data.success){
+            fetchData();
         }
     }
 
@@ -32,7 +52,7 @@ export const UserProvider = ({children})=>{
     } , []);
 
     return(
-        <UserContext.Provider value={{user , setUser , fetchData , setIsLogout , isLogout}}>
+        <UserContext.Provider value={{user , setUser , fetchData , setIsLogout , isLogout , loading}}>
             {children}
         </UserContext.Provider>
     )

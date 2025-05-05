@@ -1,0 +1,16 @@
+.sidebar-item {
+    transition: background-color 0.3s, border-radius 0.3s;
+    cursor: pointer;
+    border-radius: 0; /* Initial state */
+  }
+  
+  .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 12px; /* Rounded corners on hover */
+  }
+
+  .sidebar-item.active {
+    background-color: rgba(255, 255, 255, 0.4); /* darker shade for active */
+    border-radius: 12px;
+  }
+  

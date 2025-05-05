@@ -26,6 +26,7 @@ import commentRoute from './routes/comment.route.js'
 import playlistRoute from './routes/playlist.route.js'
 import tweetRoute from './routes/tweet.route.js'
 import subscriberRoute from './routes/subscription.route.js'
+import watchHistoryRoute from './routes/watchHistory.route.js';
 
 app.use("/api/v1/user" , userRouter);
 app.use("/api/v1/videos" , videoRoute);
@@ -34,6 +35,7 @@ app.use("/api/v1/comments" , commentRoute);
 app.use("/api/v1/playlist" , playlistRoute);
 app.use("/api/v1/tweets" , tweetRoute);
 app.use("/api/v1/subscribers" , subscriberRoute);
+app.use("/api/v1/history" , watchHistoryRoute)
 
 
 

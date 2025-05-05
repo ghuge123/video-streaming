@@ -97,6 +97,7 @@ export const userLogin = async (req, res) => {
     const { refreshToken, accessToken } = await generateAccessTokenAndRefreshToken(user._id);
     
     console.log(accessToken);
+    console.log(refreshToken);
     const options = {
         httpOnly: true,
         secure: true
@@ -134,16 +135,16 @@ export const refreshAccessToken = async (req, res) => {
     try {
         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
         if (!incomingRefreshToken) {
-            return res.status(401).json("unauthorize user");
+            return res.status(401).json({message: "unauthorize user" , success: false});
         }
         let decodedToken = jwt.verify(incomingRefreshToken, process.env.JWT_REFRESH_SECRET);
         let user = await User.findById(decodedToken?.user.id);
         if (!user) {
-            return res.status(409).send("Invalid refresh token");
+            return res.status(409).send({message: "Invalid refresh token" , success: false});
         }
 
         if (user?.refreshToken !== incomingRefreshToken) {
-            return res.status(401).json("Invalid refresh token or expired");
+            return res.status(401).json({message:"Invalid refresh token or expired" , success: false});
         }
 
         const options = {
@@ -157,9 +158,9 @@ export const refreshAccessToken = async (req, res) => {
             .status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
-            .json("access token refresh successfully");
+            .json({message: "access token refresh successfully" , success: true});
     } catch (error) {
-        res.status(401).json(error);
+        res.status(401).json({message: error , success: false});
     }
 }
 

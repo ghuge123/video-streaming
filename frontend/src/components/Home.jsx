@@ -8,6 +8,7 @@ import Signup from "./Signup";
 import GetVideo from "./GetVideo";
 import Channel from "./Channel";
 import Search from "./Search";
+import SidebarTabs from "./SidebarTabs";
 
 export default function Home() {
     const [sidebar, setSidebar] = useState(true);
@@ -41,6 +42,10 @@ export default function Home() {
                         <Route path="/getVideo" element={<GetVideo sidebar={sidebar} showAlert={showAlert}></GetVideo>} />
                         <Route path="/channel" element= {<Channel sidebar={sidebar} showAlert={showAlert}></Channel>}/>
                         <Route path="/search" element= {<Search sidebar={sidebar} showAlert={showAlert}></Search>}></Route>
+                        <Route path="history" element={<SidebarTabs sidebar={sidebar} showAlert={showAlert}></SidebarTabs>}/>
+                        <Route path="liked" element={<SidebarTabs sidebar={sidebar} showAlert={showAlert}></SidebarTabs>}/>
+                        <Route path="subscriptions" element={<SidebarTabs sidebar={sidebar} showAlert={showAlert}></SidebarTabs>}/>
+                        <Route path="playlists" element={<SidebarTabs sidebar={sidebar} showAlert={showAlert}></SidebarTabs>}/>
                     </Routes>
             </Router>
 

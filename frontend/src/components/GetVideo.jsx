@@ -9,11 +9,16 @@ import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
 import { LikeContext } from '../context/LikeContext';
 import { CommentsContext } from '../context/CommentsContext';
 import Comment from './Comment';
+import HomeIcon from '@mui/icons-material/Home';
+import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
+import SmartDisplayIcon from '@mui/icons-material/SmartDisplay';
+import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import HistoryIcon from '@mui/icons-material/History';
 
 
 function GetVideo({ sidebar, showAlert }) {
-  sidebar = !sidebar
-  const { user, isLogout } = useContext(UserContext);
+  sidebar = !sidebar;
+  const {user} = useContext(UserContext);
   const location = useLocation();
   const navigate = useNavigate();
   const video = location.state?.video;
@@ -36,15 +41,26 @@ function GetVideo({ sidebar, showAlert }) {
       setTotalSubscribers(result.totalSubscribers);
       setSubscribe(result.isSubscribed || false);
 
-      const total = await totalLikes(owner._id);
+      const total = await totalLikes(video._id);
       setTotalLike(total);
 
       const res = await fetchComments(video._id);
       setComment(res);
 
       if (user) {
-        const isLike = await likedVideos(owner._id); // assuming like is on the video
+        const isLike = await likedVideos(video._id); // assuming like is on the video
         setLike(isLike);
+        const url = 'http://localhost:8080/api/v1/history';
+        const addHistory = await fetch(url , {
+          method: 'post',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({userId: user._id , videoId: video._id})
+        });
+        const data = await addHistory.json();
+        console.log(data);
       } else {
         // Reset state on logout
         setLike(false);
@@ -59,8 +75,8 @@ function GetVideo({ sidebar, showAlert }) {
 
   const toggleLike = async () => {
     if (user) {
-      const res = await toggleLikeButton(owner._id);
-      const total = await totalLikes(owner._id);
+      const res = await toggleLikeButton(video._id);
+      const total = await totalLikes(video._id);
       setLike(res);
       setTotalLike(total);
       setUnlike(false);
@@ -72,8 +88,8 @@ function GetVideo({ sidebar, showAlert }) {
   const toggleUnlike = async () => {
     if (user) {
       if (like) {
-        const res = await toggleLikeButton(owner._id);
-        const total = await totalLikes(owner._id);
+        const res = await toggleLikeButton(video._id);
+        const total = await totalLikes(video._id);
         setLike(res);
         setTotalLike(total);
       }
@@ -136,15 +152,40 @@ function GetVideo({ sidebar, showAlert }) {
   // If no video was passed (like direct visit), redirect or show message
   return (
     <div >
-      <div style={{
-        height: '100vh',
-        width: '280px',
-        backgroundColor: 'red',
-        display: sidebar ? '' : 'none',
-        zIndex: '1',
-        position: "absolute",
-        marginTop: 'none'
-      }}></div>
+      <div className='p-4' style={
+        {
+          height: '100vh',
+          width: '280px',
+          backgroundColor: 'red',
+          display: sidebar ? '' : 'none',
+        }
+      }>
+        <div className={`d-flex align-items-center px-3 sidebar-item ${location.pathname=='/'? 'active':''}`} style={{height:'50px' , width:'230px'}}>
+          <Link to='/' style={{textDecoration: 'none' , color: 'white'}}><HomeIcon className='fs-3'></HomeIcon></Link>
+          <Link to='/' className='mx-4' style={{textDecoration: 'none' , color: 'white'}}>Home</Link>
+        </div>
+        <div className={`d-flex align-items-center mt-2 px-3 sidebar-item ${location.pathname=='/subscriptions'? 'active':''}`} style={{height:'50px' , width:'230px'}}>
+          <Link to='/subscriptions' state={{ type: 'subscriptions' }} style={{textDecoration: 'none' , color: 'white'}}><SubscriptionsIcon className='fs-3'></SubscriptionsIcon></Link>
+          <Link to='/subscriptions' state={{ type: 'subscriptions' }} className='mx-4' style={{textDecoration: 'none' , color: 'white'}}>Subscriptions</Link>
+        </div>
+        <div className={`d-flex align-items-center mt-2 px-3 sidebar-item ${location.pathname=='/liked'? 'active':''}`} style={{height:'50px' , width:'230px'}}>
+          <Link to='/liked' state={{ type: 'liked' }} style={{textDecoration: 'none' , color: 'white'}}><ThumbUpOffAltIcon className='fs-3'></ThumbUpOffAltIcon></Link>
+          <Link to='/liked' state={{ type: 'liked' }} className='mx-4' style={{textDecoration: 'none' , color: 'white'}}>Liked videos</Link>
+        </div>
+        <div className={`d-flex align-items-center mt-2 px-3 sidebar-item ${location.pathname=='/yourVideos'? 'active':''}`} style={{height:'50px' , width:'230px'}}>
+          <Link to='/yourVideos' state={{ type: 'yourVideos' }} style={{textDecoration: 'none' , color: 'white'}}><SmartDisplayIcon className='fs-3'></SmartDisplayIcon></Link>
+          <Link to='/yourVideos' state={{ type: 'yourVideos' }} className='mx-4' style={{textDecoration: 'none' , color: 'white'}}>Your videos</Link>
+        </div>
+        <div className={`d-flex align-items-center mt-2 px-3 sidebar-item ${location.pathname=='/playlists'? 'active':''}`} style={{height:'50px' , width:'230px'}}>
+          <Link to='/playlists' state={{ type: 'playlists' }} style={{textDecoration: 'none' , color: 'white'}}><PlaylistPlayIcon className='fs-3'></PlaylistPlayIcon></Link>
+          <Link to='/playlists' state={{ type: 'playlists' }} className='mx-4' style={{textDecoration: 'none' , color: 'white'}}>Playlists</Link>
+        </div>
+        <div className={`d-flex align-items-center mt-2 px-3 sidebar-item ${location.pathname=='/history'? 'active':''}`} style={{height:'50px' , width:'230px'}}>
+          <Link to='/history' state={{ type: 'history' }} style={{textDecoration: 'none' , color: 'white'}}><HistoryIcon className='fs-3'></HistoryIcon></Link>
+          <Link to='/history' state={{ type: 'history' }} className='mx-4' style={{textDecoration: 'none' , color: 'white'}}>History</Link>
+        </div>
+
+      </div>
       <div style={{ marginLeft: '26px' }}>
         <video controls style={{ height: '460px', width: '900px' }} className="mt-3">
           <source src={video.videoFile} type="video/mp4" />
